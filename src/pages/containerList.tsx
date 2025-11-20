@@ -144,140 +144,251 @@ const ContainerList = () => {
   };
 
   // 📥 Export ONE container’s invoices (one row per invoice)
-  const handleExportInvoiceExcel = async (containerNumber) => {
-    if (!containerNumber) {
-      toast.error('Invalid container number.');
+  // const handleExportInvoiceExcel = async (containerNumber) => {
+  //   if (!containerNumber) {
+  //     toast.error('Invalid container number.');
+  //     return;
+  //   }
+
+  //   try {
+  //     // Find all containers with this number (original list)
+  //     const matchingContainers = containerList.filter(
+  //       (c) =>
+  //         c.ContainerNumber &&
+  //         c.ContainerNumber.toString().trim().toLowerCase() ===
+  //           containerNumber.toString().trim().toLowerCase()
+  //     );
+
+  //     if (matchingContainers.length === 0) {
+  //       toast.error('No container found with this number.');
+  //       return;
+  //     }
+
+  //     // Extract all unique invoice numbers
+  //     const invoiceSet = new Set();
+  //     matchingContainers.forEach((container) => {
+  //       let invoices = [];
+  //       if (typeof container.Invoices === 'string') {
+  //         invoices = container.Invoices.split(',').map((i) => i.trim());
+  //       } else if (Array.isArray(container.Invoices)) {
+  //         invoices = container.Invoices;
+  //       }
+  //       invoices.forEach((item) => {
+  //         const [invNo] = item.split('/');
+  //         if (invNo) invoiceSet.add(invNo.trim());
+  //       });
+  //     });
+
+  //     const invoiceNumbers = Array.from(invoiceSet);
+  //     if (invoiceNumbers.length === 0) {
+  //       toast.warn('No invoices found in this container.');
+  //       return;
+  //     }
+
+  //     // Fetch bookings
+  //     const response = await axios.get(AppRoutes.allBookings);
+  //     const allBookings = response?.data?.data?.bookings || [];
+
+  //     // Match bookings by invoice number (before `/`)
+  //     const matchingBookings = allBookings.filter((b) =>
+  //       invoiceNumbers.includes((b.InvoiceNo?.split('/')[0] || '').trim())
+  //     );
+
+  //     if (matchingBookings.length === 0) {
+  //       toast.warn('No bookings found for the invoices in this container.');
+  //       return;
+  //     }
+
+  //     // Build Excel rows: one per booking/invoice
+  //     const excelData = matchingBookings.map((b) => {
+  //       const container = matchingContainers[0]; // use first for common fields
+  //       return {
+  //         'Company Name':'Pak Chinar Cargo',
+  //         'Container No': container.ContainerNumber || '-',
+  //         'Bilty No': b.BiltyNo || '-',
+  //         'Booking Date': b.BookingDate || '-',
+  //         'No Of Pieces': b.NoOfPieces || '-',
+  //         'Sender Name': b.SenderName || '-',
+  //         'Receiver Name': b.ReceiverName || '-',
+  //         'Sender Mobile': b.SenderMobile || '-',
+  //        'Receiver Mobile1': b.ReceiverMobile1 || '-',
+  //         'Receiver Mobile2': b.ReceiverMobile2 || '-',
+  //         'Receiver Address': b.ReceiverAddress || '-',
+  //         'Receiver Area': b.ReceiverArea || '-',
+  //         // Status: b.status || '-',
+  //         // From: container.Destination?.From || '-',
+  //         // To: container.Destination?.To || '-',
+  //         // // 'Sender Id Number': b.SenderIdNumber || '-',
+  //         // 'Sender Address': b.SenderAddress || '-',
+  //         // 'Sender Area': b.SenderArea || '-',
+       
+         
+  //         // 'Item Details': b.ItemDetails || '-',
+  //         // 'Other Details': b.OtherDetails || '-',
+  //         // Branch: b.Branch || '-',
+  //         // 'Sub Total': b.SubTotal || '-',
+  //         // Vat: b.Vat || '-',
+  //         // 'Vat Total': b.VatTotal || '-',
+  //         // 'Invoice Total': b.InvoiceTotal || '-',
+  //         // 'Amount In Words': b.AmountInWords || '-',
+  //         // 'Invoice No': b.InvoiceNo || '-',
+  //         // City: b.City || '-',
+  //         // 'Tracking Details': JSON.stringify(b.tracking_details || []),
+  //         // 'Tracking History': JSON.stringify(b.tracking_history || []),
+
+  //         // Charges
+  //         // 'Freight Charges Enabled': b.Charges?.FreightCharges?.enabled ?? '-',
+  //         // 'Freight Charges Unit Rate': b.Charges?.FreightCharges?.unitRate ?? '-',
+  //         // 'Freight Charges Qty': b.Charges?.FreightCharges?.qty ?? '-',
+  //         // 'Freight Charges Total': b.Charges?.FreightCharges?.total ?? '-',
+  //         // 'Insurance Enabled': b.Charges?.Insurance?.enabled ?? '-',
+  //         // 'Insurance Unit Rate': b.Charges?.Insurance?.unitRate ?? '-',
+  //         // 'Insurance Qty': b.Charges?.Insurance?.qty ?? '-',
+  //         // 'Insurance Total': b.Charges?.Insurance?.total ?? '-',
+  //         // 'Packing Enabled': b.Charges?.Packing?.enabled ?? '-',
+  //         // 'Packing Unit Rate': b.Charges?.Packing?.unitRate ?? '-',
+  //         // 'Packing Qty': b.Charges?.Packing?.qty ?? '-',
+  //         // 'Packing Total': b.Charges?.Packing?.total ?? '-',
+  //         // 'Customs Enabled': b.Charges?.Customs?.enabled ?? '-',
+  //         // 'Customs Unit Rate': b.Charges?.Customs?.unitRate ?? '-',
+  //         // 'Customs Qty': b.Charges?.Customs?.qty ?? '-',
+  //         // 'Customs Total': b.Charges?.Customs?.total ?? '-',
+  //         // 'Clearance Enabled': b.Charges?.Clearance?.enabled ?? '-',
+  //         // 'Clearance Unit Rate': b.Charges?.Clearance?.unitRate ?? '-',
+  //         // 'Clearance Qty': b.Charges?.Clearance?.qty ?? '-',
+  //         // 'Clearance Total': b.Charges?.Clearance?.total ?? '-',
+  //         // 'Other Charges Enabled': b.Charges?.OtherCharges?.enabled ?? '-',
+  //         // 'Other Charges Unit Rate': b.Charges?.OtherCharges?.unitRate ?? '-',
+  //         // 'Other Charges Qty': b.Charges?.OtherCharges?.qty ?? '-',
+  //         //'Other Charges Total': b.Charges?.OtherCharges?.total ?? '-',
+  //         //'Discount Enabled': b.Charges?.Discount?.enabled ?? '-',
+  //         //'Discount Unit Rate': b.Charges?.Discount?.unitRate ?? '-',
+  //         //'Discount Qty': b.Charges?.Discount?.qty ?? '-',
+  //         //'Discount Total': b.Charges?.Discount?.total ?? '-',
+  //       };
+  //     });
+
+  //     // Export
+  //     const ws = XLSX.utils.json_to_sheet(excelData);
+  //     const wb = XLSX.utils.book_new();
+  //     XLSX.utils.book_append_sheet(wb, ws, 'Invoices');
+  //     const fileName = `Container_${containerNumber}_Invoices.xlsx`;
+  //     XLSX.writeFile(wb, fileName);
+  //     toast.success(`✅ Exported ${excelData.length} invoice(s)`);
+  //   } catch (error) {
+  //     console.error('Export error:', error);
+  //     toast.error('❌ Failed to export invoice data.');
+  //   }
+  // };
+const handleExportInvoiceExcel = async (containerNumber) => {
+  if (!containerNumber) {
+    toast.error('Invalid container number.');
+    return;
+  }
+
+  try {
+    // Find all containers with this number (original list)
+    const matchingContainers = containerList.filter(
+      (c) =>
+        c.ContainerNumber &&
+        c.ContainerNumber.toString().trim().toLowerCase() ===
+          containerNumber.toString().trim().toLowerCase()
+    );
+
+    if (matchingContainers.length === 0) {
+      toast.error('No container found with this number.');
       return;
     }
 
-    try {
-      // Find all containers with this number (original list)
-      const matchingContainers = containerList.filter(
-        (c) =>
-          c.ContainerNumber &&
-          c.ContainerNumber.toString().trim().toLowerCase() ===
-            containerNumber.toString().trim().toLowerCase()
-      );
-
-      if (matchingContainers.length === 0) {
-        toast.error('No container found with this number.');
-        return;
+    // Extract all unique invoice numbers
+    const invoiceSet = new Set();
+    matchingContainers.forEach((container) => {
+      let invoices = [];
+      if (typeof container.Invoices === 'string') {
+        invoices = container.Invoices.split(',').map((i) => i.trim());
+      } else if (Array.isArray(container.Invoices)) {
+        invoices = container.Invoices;
       }
-
-      // Extract all unique invoice numbers
-      const invoiceSet = new Set();
-      matchingContainers.forEach((container) => {
-        let invoices = [];
-        if (typeof container.Invoices === 'string') {
-          invoices = container.Invoices.split(',').map((i) => i.trim());
-        } else if (Array.isArray(container.Invoices)) {
-          invoices = container.Invoices;
-        }
-        invoices.forEach((item) => {
-          const [invNo] = item.split('/');
-          if (invNo) invoiceSet.add(invNo.trim());
-        });
+      invoices.forEach((item) => {
+        const [invNo] = item.split('/');
+        if (invNo) invoiceSet.add(invNo.trim());
       });
+    });
 
-      const invoiceNumbers = Array.from(invoiceSet);
-      if (invoiceNumbers.length === 0) {
-        toast.warn('No invoices found in this container.');
-        return;
-      }
-
-      // Fetch bookings
-      const response = await axios.get(AppRoutes.allBookings);
-      const allBookings = response?.data?.data?.bookings || [];
-
-      // Match bookings by invoice number (before `/`)
-      const matchingBookings = allBookings.filter((b) =>
-        invoiceNumbers.includes((b.InvoiceNo?.split('/')[0] || '').trim())
-      );
-
-      if (matchingBookings.length === 0) {
-        toast.warn('No bookings found for the invoices in this container.');
-        return;
-      }
-
-      // Build Excel rows: one per booking/invoice
-      const excelData = matchingBookings.map((b) => {
-        const container = matchingContainers[0]; // use first for common fields
-        return {
-          'Container No': container.ContainerNumber || '-',
-          From: container.Destination?.From || '-',
-          To: container.Destination?.To || '-',
-          'Sender Name': b.SenderName || '-',
-          'Sender Mobile': b.SenderMobile || '-',
-          'Sender Id Number': b.SenderIdNumber || '-',
-          'Sender Address': b.SenderAddress || '-',
-          'Sender Area': b.SenderArea || '-',
-          'Receiver Name': b.ReceiverName || '-',
-          'Receiver Mobile1': b.ReceiverMobile1 || '-',
-          'Receiver Mobile2': b.ReceiverMobile2 || '-',
-          'Receiver Address': b.ReceiverAddress || '-',
-          'Receiver Area': b.ReceiverArea || '-',
-          'Item Details': b.ItemDetails || '-',
-          'Other Details': b.OtherDetails || '-',
-          'No Of Pieces': b.NoOfPieces || '-',
-          Branch: b.Branch || '-',
-          'Booking Date': b.BookingDate || '-',
-          'Sub Total': b.SubTotal || '-',
-          Vat: b.Vat || '-',
-          'Vat Total': b.VatTotal || '-',
-          'Invoice Total': b.InvoiceTotal || '-',
-          'Amount In Words': b.AmountInWords || '-',
-          'Bilty No': b.BiltyNo || '-',
-          'Invoice No': b.InvoiceNo || '-',
-          City: b.City || '-',
-          'Total Weight': b.totalWeight || '-',
-          Status: b.status || '-',
-          'Tracking Details': JSON.stringify(b.tracking_details || []),
-          'Tracking History': JSON.stringify(b.tracking_history || []),
-
-          // Charges
-          'Freight Charges Enabled': b.Charges?.FreightCharges?.enabled ?? '-',
-          'Freight Charges Unit Rate': b.Charges?.FreightCharges?.unitRate ?? '-',
-          'Freight Charges Qty': b.Charges?.FreightCharges?.qty ?? '-',
-          'Freight Charges Total': b.Charges?.FreightCharges?.total ?? '-',
-          'Insurance Enabled': b.Charges?.Insurance?.enabled ?? '-',
-          'Insurance Unit Rate': b.Charges?.Insurance?.unitRate ?? '-',
-          'Insurance Qty': b.Charges?.Insurance?.qty ?? '-',
-          'Insurance Total': b.Charges?.Insurance?.total ?? '-',
-          'Packing Enabled': b.Charges?.Packing?.enabled ?? '-',
-          'Packing Unit Rate': b.Charges?.Packing?.unitRate ?? '-',
-          'Packing Qty': b.Charges?.Packing?.qty ?? '-',
-          'Packing Total': b.Charges?.Packing?.total ?? '-',
-          'Customs Enabled': b.Charges?.Customs?.enabled ?? '-',
-          'Customs Unit Rate': b.Charges?.Customs?.unitRate ?? '-',
-          'Customs Qty': b.Charges?.Customs?.qty ?? '-',
-          'Customs Total': b.Charges?.Customs?.total ?? '-',
-          'Clearance Enabled': b.Charges?.Clearance?.enabled ?? '-',
-          'Clearance Unit Rate': b.Charges?.Clearance?.unitRate ?? '-',
-          'Clearance Qty': b.Charges?.Clearance?.qty ?? '-',
-          'Clearance Total': b.Charges?.Clearance?.total ?? '-',
-          'Other Charges Enabled': b.Charges?.OtherCharges?.enabled ?? '-',
-          'Other Charges Unit Rate': b.Charges?.OtherCharges?.unitRate ?? '-',
-          'Other Charges Qty': b.Charges?.OtherCharges?.qty ?? '-',
-          'Other Charges Total': b.Charges?.OtherCharges?.total ?? '-',
-          'Discount Enabled': b.Charges?.Discount?.enabled ?? '-',
-          'Discount Unit Rate': b.Charges?.Discount?.unitRate ?? '-',
-          'Discount Qty': b.Charges?.Discount?.qty ?? '-',
-          'Discount Total': b.Charges?.Discount?.total ?? '-',
-        };
-      });
-
-      // Export
-      const ws = XLSX.utils.json_to_sheet(excelData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Invoices');
-      const fileName = `Container_${containerNumber}_Invoices.xlsx`;
-      XLSX.writeFile(wb, fileName);
-      toast.success(`✅ Exported ${excelData.length} invoice(s)`);
-    } catch (error) {
-      console.error('Export error:', error);
-      toast.error('❌ Failed to export invoice data.');
+    const invoiceNumbers = Array.from(invoiceSet);
+    if (invoiceNumbers.length === 0) {
+      toast.warn('No invoices found in this container.');
+      return;
     }
-  };
+
+    // Fetch bookings
+    const response = await axios.get(AppRoutes.allBookings);
+    const allBookings = response?.data?.data?.bookings || [];
+
+    // Match bookings by invoice number (before `/`)
+    const matchingBookings = allBookings.filter((b) =>
+      invoiceNumbers.includes((b.InvoiceNo?.split('/')[0] || '').trim())
+    );
+
+    if (matchingBookings.length === 0) {
+      toast.warn('No bookings found for the invoices in this container.');
+      return;
+    }
+
+    // Build Excel rows: one per booking/invoice
+    const excelData = matchingBookings.map((b) => {
+      const container = matchingContainers[0]; // use first for common fields
+      return {
+        'Company Name': 'Pak Chinar Cargo',
+        'Container No': container.ContainerNumber || '-',
+        'Bilty No': b.BiltyNo || '-',
+        'Booking Date': b.BookingDate || '-',
+        'No Of Pieces': b.NoOfPieces || '-',
+        'Sender Name': b.SenderName || '-',
+        'Receiver Name': b.ReceiverName || '-',
+        'Sender Mobile': b.SenderMobile || '-',
+        'Receiver Mobile1': b.ReceiverMobile1 || '-',
+        'Receiver Mobile2': b.ReceiverMobile2 || '-',
+        'Receiver Address': b.ReceiverAddress || '-',
+        'Receiver Area': b.ReceiverArea || '-',
+      };
+    });
+
+    // Convert to worksheet
+    const ws = XLSX.utils.json_to_sheet(excelData);
+
+    // Auto-fit columns
+    const colWidths = [];
+    const headerKeys = Object.keys(excelData[0] || {});
+
+    headerKeys.forEach((key, index) => {
+      // Start with header cell width
+      let maxLength = key.length;
+
+      // Check each row's value in this column
+      excelData.forEach((row) => {
+        const value = row[key] != null ? String(row[key]) : '';
+        maxLength = Math.max(maxLength, value.length);
+      });
+
+      // Clamp width (min 8, max 50)
+      const width = Math.min(50, Math.max(8, maxLength));
+      colWidths.push({ wch: width });
+    });
+
+    ws['!cols'] = colWidths;
+
+    // Build workbook and export
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Invoices');
+    const fileName = `Container_${containerNumber}_Invoices.xlsx`;
+    XLSX.writeFile(wb, fileName);
+    toast.success(`✅ Exported ${excelData.length} invoice(s)`);
+  } catch (error) {
+    console.error('Export error:', error);
+    toast.error('❌ Failed to export invoice data.');
+  }
+};
 
   // 📥 Download All Containers Excel (one row per invoice)
   const handleDownloadExcel = async () => {

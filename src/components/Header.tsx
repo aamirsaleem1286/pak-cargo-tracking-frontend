@@ -301,7 +301,7 @@ const Header = () => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
       {!user ? <SocialMedia />:""}
-      <div className="mx-auto px-4 lg:px-8">
+      <div className={`mx-auto px-4 lg:px-8 ${user ? 'lg:mt-10' : 'lg:mt-0'}`}>
         <div className="flex items-center justify-between h-16 lg:h-10">
           {/* Logo */}
           <div className="flex-shrink-0">
