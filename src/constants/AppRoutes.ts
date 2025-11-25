@@ -24,7 +24,8 @@ export const AppRoutes = {
     getSingleContainer: BASE_URL + "/api/container",
     updateSingleContainer: BASE_URL + "/api/update-container",
     getBookingById: BASE_URL + "/api/getBookingById",
-    
+    // getContainerById: BASE_URL + "/api/edit-container/edit",
+getContainerById: BASE_URL + "/api/edit-container/edit/:id",
     updateBulkContainerStatus: BASE_URL + "/api/updateBulkContainerStatus",
     
     

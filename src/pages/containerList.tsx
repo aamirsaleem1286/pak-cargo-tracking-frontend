@@ -113,6 +113,11 @@ const ContainerList = () => {
 
   const handleEditContainer = (id, containerStatus) => {
     if (containerStatus?.toLowerCase() === 'shipment in container') {
+      console.log("idd",id)
+        const containerObj = containerList.find(c => c._id === id);
+
+    console.log("Invoices (Raw) → ", containerObj?.Invoices);
+    console.log("Container Object → ", containerObj);
       navigate(`/edit-container/edit/${id}`);
     } else {
       toast.error(`This container cannot be edited. Status: ${containerStatus}`);

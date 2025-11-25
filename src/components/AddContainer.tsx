@@ -18,17 +18,20 @@ const AddContainer = ({
   const [toCity, setToCity] = useState('');
   const [selectAll, setSelectAll] = useState(false);
   const [loadingSave, setLoadingSave] = useState(false);
-  const [totalInvoices, setTotalInvoices] = useState();
+  const [totalInvoices, setTotalInvoices] = useState(0);
   const [invoices, setInvoices] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // ✅ Sync invoices when invoiceList changes
+  // ✅ Sync invoices when invoiceList changes — now with stable `id`
   useEffect(() => {
     const updatedInvoices = invoiceList.map((invoice) => {
       const [invNo = ''] = invoice.InvoiceNo?.split('/') || [];
       const pcs = invoice.RemainingPieces ?? 0;
+      const id = `${invoice.BiltyNo || 'NO_BILTY'}-${invNo}-${invoice._id || invoice.id || Math.random()}`;
+      
       return {
         ...invoice,
+        id,
         invNo,
         pcs,
         shipped: null,
@@ -48,10 +51,10 @@ const AddContainer = ({
     invoice.invNo.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
-  const handleSelect = (index, checked) => {
+  const handleSelect = (id, checked) => {
     setInvoices((prev) => {
-      const updated = prev.map((inv, i) =>
-        i === index
+      const updated = prev.map((inv) =>
+        inv.id === id
           ? {
               ...inv,
               selected: checked,
@@ -74,20 +77,24 @@ const AddContainer = ({
         shipped: checked ? inv.pcs : null,
         balance: checked ? 0 : null,
       }));
-      const fullyShipped = updated.filter((inv) => inv.selected && inv.balance === 0).length;
-      setTotalInvoices(invoiceList.length - fullyShipped);
+      recalculateTotalInvoices(updated);
       return updated;
     });
   };
 
-  const handleShippedChange = (index, value) => {
+  const handleShippedChange = (id, value) => {
     setInvoices((prev) => {
-      const updated = prev.map((inv, i) => {
-        if (i !== index) return inv;
+      const updated = prev.map((inv) => {
+        if (inv.id !== id) return inv;
         const pcs = inv.pcs;
-        const shipped = Number(value);
+        const shipped = value === '' ? null : Number(value);
 
-        if (isNaN(shipped) || shipped < 0 || shipped > pcs) {
+        // Allow empty input for typing
+        if (value === '' || isNaN(shipped)) {
+          return { ...inv, shipped: '', balance: '' };
+        }
+
+        if (shipped < 0 || shipped > pcs) {
           return { ...inv, shipped: '', balance: '' };
         }
 
@@ -118,15 +125,7 @@ const AddContainer = ({
       toast.error('Please select a container number');
       return;
     }
-    
-    const currentSelectedBilty = invoices
-      .filter(inv => inv.selected)
-      .map(inv => ({
-        BiltyNo: inv.BiltyNo,
-        ContainerNumber: selectedContainer || 'N/A',
-        Invoices: [`${inv.invNo}/${inv.shipped}`],
-      }));
-      
+
     const validInvoices = invoices.filter((inv) => {
       const shipped = inv.shipped;
       return typeof shipped === 'number' && shipped > 0 && shipped <= inv.pcs;
@@ -152,14 +151,20 @@ const AddContainer = ({
     try {
       setLoadingSave(true);
       const response = await axios.post(AppRoutes.addContainer, payload);
-      toast.success(response?.data?.data?.message);
+      toast.success(response?.data?.data?.message || 'Container updated successfully');
       refreshBookedContainer?.();
       refreshContainerNoList?.();
       refreshInvoices?.();
+      // Optional: reset form
+      setSelectedContainer('');
+      setFromCity('');
+      setToCity('');
+      setSearchTerm('');
+      setSelectAll(false);
     } catch (error) {
       const err = error?.response?.data?.errors;
       if (err?.general) toast.error(err.general);
-      else toast.error('Something went wrong');
+      else toast.error('Something went wrong while saving');
     } finally {
       setLoadingSave(false);
     }
@@ -200,7 +205,7 @@ const AddContainer = ({
         >
           <option value="">Select Container No</option>
           {containerList.map((c, i) => (
-            <option key={i} value={c.ContainerNumber}>
+            <option key={c.ContainerNumber || i} value={c.ContainerNumber}>
               {c.ContainerNumber}
             </option>
           ))}
@@ -252,30 +257,35 @@ const AddContainer = ({
                 </tr>
               </thead>
               <tbody>
-                {filteredInvoices.map((b, i) => (
-                  <tr key={i} className="text-center text-sm">
-                    <td className="border px-2 py-1">{b.BiltyNo}</td>
-                    <td className="border px-2 py-1">{b.invNo}</td>
-                    <td className="border px-2 py-1">{b.pcs}</td>
-                    <td className="border px-2 py-1">
-                      <input
-                        type="number"
-                        value={b.shipped ?? ''}
-                        disabled={b.selected}
-                        onChange={(e) => handleShippedChange(i, e.target.value)}
-                        className="w-16 border rounded px-2 py-1 text-sm"
-                      />
-                    </td>
-                    <td className="border px-2 py-1">{b.balance ?? ''}</td>
-                    <td className="border px-2 py-1">
-                      <input
-                        type="checkbox"
-                        checked={b.selected}
-                        onChange={(e) => handleSelect(i, e.target.checked)}
-                      />
-                    </td>
-                  </tr>
-                ))}
+                {filteredInvoices.map((b) => {
+                  // ✅ Use stable `id` — no index issues!
+                  return (
+                    <tr key={b.id} className="text-center text-sm">
+                      <td className="border px-2 py-1">{b.BiltyNo}</td>
+                      <td className="border px-2 py-1">{b.invNo}</td>
+                      <td className="border px-2 py-1">{b.pcs}</td>
+                      <td className="border px-2 py-1">
+                        <input
+                          type="number"
+                          value={b.shipped ?? ''}
+                          disabled={b.selected}
+                          onChange={(e) => handleShippedChange(b.id, e.target.value)}
+                          className="w-16 border rounded px-2 py-1 text-sm"
+                          min="0"
+                          max={b.pcs}
+                        />
+                      </td>
+                      <td className="border px-2 py-1">{b.balance ?? ''}</td>
+                      <td className="border px-2 py-1">
+                        <input
+                          type="checkbox"
+                          checked={b.selected}
+                          onChange={(e) => handleSelect(b.id, e.target.checked)}
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
             
@@ -313,7 +323,7 @@ const AddContainer = ({
             <input
               type="text"
               disabled
-              value={`Total No Of Bilty: ${selectedBilty.length}`}
+              value={`Total Invoices: ${selectedBilty.flatMap(b => b.Invoices || []).length}`}
               className="border text-center rounded px-2 py-1 text-sm"
             />
           </div>
@@ -328,21 +338,27 @@ const AddContainer = ({
                 </tr>
               </thead>
               <tbody>
-                {selectedBilty.sort().flatMap((b, i) => {
-                  return b.Invoices.map((item, j) => {
-                    const [inv, qty] = item.split('/');
-                    const BiltyNo = b.BilityNo || b.Bilty_No || b.biltyNo || b['Bilty No'];
+                {selectedBilty.flatMap((b) => {
+                  const BiltyNo = b.BiltyNo || b.BilityNo || b.Bilty_No || b.biltyNo || b['Bilty No'] || 'N/A';
+                  return (b.Invoices || []).map((item) => {
+                    const [inv, qty] = (item || '').split('/');
                     return (
-                      <tr key={`${b.ContainerNumber}-${inv}`} className="text-center text-sm">
-                        <td className="border px-2 py-1">{b.ContainerNumber}</td>
-                        <td className="border px-2 py-1">{inv}</td>
-                        <td className="border px-2 py-1">{qty}</td>
+                      <tr key={`${b.ContainerNumber}-${inv}-${BiltyNo}`} className="text-center text-sm">
+                        <td className="border px-2 py-1">{b.ContainerNumber || 'N/A'}</td>
+                        <td className="border px-2 py-1">{inv || 'N/A'}</td>
+                        <td className="border px-2 py-1">{qty || 0}</td>
                       </tr>
                     );
                   });
                 })}
               </tbody>
             </table>
+            
+            {selectedBilty.length === 0 && (
+              <div className="text-center py-4 text-gray-500">
+                No bilty linked yet
+              </div>
+            )}
           </div>
         </div>
       </div>
